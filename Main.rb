@@ -1,6 +1,5 @@
-# Yahtzee
-Ruby text based Yahtzee game
-
+#Yahtzee
+A ruby text based Yahtzee game
 
 class Place
 	attr_reader :value
@@ -170,6 +169,7 @@ def score()
 	num = []
 	i = 0
 while error
+	choices = []
 	loop = true
 	while loop
 	i = 0
@@ -197,27 +197,44 @@ while error
 		num = num.sort
 		if 1==1
 			puts""
+			choices.push("1")
 			print "1: Use Numbers? "	
 		end
 		if num.length == 3 && num[0] == num[1] && num[1] == num[2]
+			choices.push("2")
 			print "2: 3 of a kind? "
 		end
 		if num.length == 4 && num[0] == num[1] && num[1] == num[2] && num[2] == num[3]
+			choices.push("3")
 			print "3: 4 of a kind? "
 		end
 		if num.length == 5 && num[0] == num[1] && num[3] == num[4]
+			choices.push("4")
 			print "4: Full House? "
 		end
 		if num.length == 4 && array_increments_by?(1, num)
+			choices.push("5")
 			print "5: Small Straight? "
 		end
 		if num.length == 5 && array_increments_by?(1, num)
+			choices.push("6")
 			print "6: Large Straight? "
 		end
 			print "7: Chance "
 			print "8: Cross-Off "
+			choices.push("7")
+			choices.push("8")
+		choice_count = 0
+		while choice_count==0
 		scorer = gets.chomp
-	
+		choices.each do |x|
+		if scorer != x
+			print "---"
+			else
+			choice_count = 1
+			end
+		end
+		end
 		if scorer  == "1"
 			@scorecard.numb(num)
 		elsif scorer == "2"
@@ -380,9 +397,38 @@ end
 def yahtzee()
 x = 0
 if @yahtz.valueShow == 0
+	puts""
+	word = gets.chomp
 	@yahtz.valueSet(50)
 else
-	puts "Which catagory are you placing it in?"
+	puts "Which catagory are you placing it in? 1: numbers  2: special sets"
+	scorer = gets.chomp
+if scorer == "1"
+	if @twos.valueShow == 0
+		print "1: ones, "
+		x=1
+	end
+	if @twos.valueShow == 0
+		print "2: twos, "
+		x=1
+	end
+	if @threes.valueShow == 0
+		print"3: threes, "
+		x=1
+	end
+	if @fours.valueShow == 0
+		print"4: fours, "
+		x=1
+	end
+	if @fives.valueShow == 0
+		print"5: fives, "
+		x=1
+	end
+	if @sixes.valueShow == 0
+		print"6: sixes, "
+		x=1
+	end
+else
 	if @threeo.valueShow == 0
 		print "1: 3 of a kind, "
 		x=1
@@ -411,7 +457,33 @@ else
 		print "Cant use Yahtzee"
 	end
 	print"7: Cross off? "
-
+end
+if scorer == "1"
+	scorer = gets.chomp
+	while x==1
+		if scorer  == "1"
+			@ones.valueSet(100)
+			x=0
+		elsif scorer == "2"
+			@twos.valueSet(100)
+			x=0
+		elsif scorer == "3"
+			@threes.valueSet(100)
+			x=0
+		elsif scorer == "4"
+			@fours.valueSet(100)
+			x=0
+		elsif scorer == "5"
+			@fives.valueSet(100)
+			x=0
+		elsif scorer == "6"
+			@sixes.valueSet(100)
+			x=0
+		else
+			print "nothing selected"
+		end
+	end
+else	
 	scorer = gets.chomp
 	while x==1
 		if scorer  == "1"
@@ -438,6 +510,7 @@ else
 			print "nothing selected"
 		end
 	end
+end
 end
 	
 end
