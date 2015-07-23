@@ -2,6 +2,31 @@
 Ruby text based Yahtzee game
 
 
+class Place
+	attr_reader :value
+	attr_accessor :crossed
+def initialize()
+	@value = 0
+	@crossed = false
+end
+
+def valueSet(num)
+	if @crossed == false
+		@value = num
+	else
+		@value = 0
+	end
+end
+
+def valueShow()
+	if @crossed
+		return "X"
+	else
+		return @value
+	end
+end
+end
+
 class Dice
 	attr_accessor :value
 def initialize(value = 1)
@@ -18,24 +43,44 @@ def initialize(diceArray)
 	@rolls = 1
 	@ender = 0
 	@scorecard = Scorecard.new
+	@start = 0
 end
 
 private
 
 def roll()
+valid = true
+while valid
 	if @rolls != 1
-		print "which dice are you rolling?:"
+		print "which dice are you rolling?: (0 for none) "
 		line = gets.chomp
 		arr = line.split
+	
 		arr.each do |x|
 			x = x.to_i
-			@inPlay[x-1].value = rand(5)+1 
+			if x <= 5
+				@inPlay[x-1].value = rand(6)+1 
+				valid = false
+			else
+				valid = true
+			end
 		end
+	#if arr[0] != "0"
+	#puts "here"
+		#@rolls = 3
+	#else
+		#arr.each do |x|
+			#x = x.to_i
+			#@inPlay[x-1].value = rand(6)+1 
+		#end
+	#end
 	else 
 	@inPlay.each do |x|
-		x.value = rand(5)+1
+		x.value = rand(6)+1
+		valid = false
 	end
-	end
+end
+end
 	dispDice
 	#@outPlay.each {|x| print "--[#{x.value}]-- "}
 	puts ""
@@ -44,41 +89,80 @@ end
 private
 
 def dispDice()
+	puts""
 	@inPlay.each {|x| print "[#{x.value}]"}
+	puts ""
+	puts ""
 end
-private
 
-
+def howTo
+	puts "1: Roll Dice which have values one to six"
+	puts "2: When entering multiple numbers seperate them with spaces ex 1 2 3 "
+	puts "3: To recieve the bonus your number scores must total 63"
+	puts "4: A Yahtzee is achieved when all 5 dice are the same number" 
+	puts "   the first Yahtzee is 50 points then each subseqent is 100 and must be placed    in another tile"
+end
 public
 
 def menu()
-
-while @ender == 0
+g = true
+if @start == 0
+	@start = 1
+	
+	while g   
+	puts ""           
+	printf" \\ \\ / /_ _| |__ | |_ _______  ___ "
+	puts ""  
+	printf"  \\ V / _` | '_ \\| __|_  / _ \\/ _ \\"
+	puts ""  
+	printf"   | | (_| | | | | |_ / /  __/  __/"
+	puts ""  
+	printf"   |_|\\__,_|_| |_|\\__/___\\___|\\___|"
+	puts ""  
 	puts ""
-	puts "1:Roll 2:Show Scorecard 3:Exit -- Roll# #{@rolls}"
+	print "	1:Start 2:How to play -- "
+	it = gets.chomp
+	if it == "2"
+		howTo
+	else
+		g = false
+	end
+end
+end
+while @ender == 0
+	print "1:Roll 2:Score Dice 3:Show Scorecard 4:Exit -- Roll# #{@rolls}  "
 	line = gets.chomp
 	#line.to_i
 	if line == "1"
 		roll
 		@rolls += 1
-	elsif line == "3"
-		@ender = 1
 	elsif line == "2"
+		hold
+	elsif line == "3"
 		@scorecard.disp
+	elsif line == "4"
+		@ender = 1
 	end
 	
 	if @rolls > 3
 		@rolls = 1
 		score
 	end
-	if @scorecard.isFull?
-		@ender == 1
+	if @scorecard.isFull
+		@scorecard.disp
+		@scorecard.calculate
+		@ender = 1
 	end
-	
 end
 end
 
+def hold
+	@rolls = 4
+end
+
 def score()
+	@scorecard.disp
+	dispDice
 	error = true
 	yaht = false
 	@outPlay.each {|x| @inPlay.push(x)}
@@ -86,17 +170,25 @@ def score()
 	num = []
 	i = 0
 while error
+	loop = true
+	while loop
+	i = 0
 	print "Which dice are you scoring?(1-5): "
 	line = gets.chomp
 	choice = line.split
 	choice.each do |x|
 		x = x.to_i
+	if x < 6
 		x-=1
 		num[i] = @inPlay[x].value 
 		i+=1
+		loop = false
+	end
+	loop = true if i < choice.length
+	end
 	end
 	
-	if num[0]==num[1] && num[2]==num[1] && num[3]==num[4] && num.length == 5
+	if num[0]==num[1] && num[2]==num[0] && num[3]==num[0] && num[4]==num[0] && num.length == 5
 		yaht = true
 		puts "Yahtzee!"
 		@scorecard.yahtzee
@@ -123,7 +215,7 @@ while error
 			print "6: Large Straight? "
 		end
 			print "7: Chance "
-			print "8: Cross-Off"
+			print "8: Cross-Off "
 		scorer = gets.chomp
 	
 		if scorer  == "1"
@@ -148,8 +240,18 @@ error = false
 error = true if @scorecard.valid == false	
 	
 end
+20.times{puts""}
+printf"     __          _  	____				   "
+puts ""
+printf"  /\\ \\ \\_____  _| |_  /__   \\_   _ _ __ _ __  "
+puts ""
+printf" /  \\/ / _ \\ \\/ / __|   / /\\/ | | | '__| '_ \\ "
+puts ""
+printf"/ /\\  /  __/>  <| |_   / /  | |_| | |  | | | |"
+puts""
+printf"\\_\\ \\/ \\___/_/\\_\\\\__|  \\/    \\__,_|_|  |_| |_|"
+puts ""
 end
-
 def array_increments_by?(step, array)
   sorted = array.sort
   lastNum = sorted[0]
@@ -168,43 +270,43 @@ class Scorecard
 	attr_reader :valid
 def initialize()
 
-	@ones = 0
-	@twos = 0
-	@threes = 0
-	@fours = 0
-	@fives = 0
-	@sixes = 0
-	@threeo = 0
-	@fouro = 0
-	@fullh = 0
-	@smalls = 0
-	@larges = 0
-	@chanced = 0
-	@yahtz = 0
+	@ones = Place.new
+	@twos = Place.new
+	@threes = Place.new
+	@fours = Place.new
+	@fives = Place.new
+	@sixes = Place.new
+	@threeo = Place.new
+	@fouro = Place.new
+	@fullh = Place.new
+	@smalls = Place.new
+	@larges = Place.new
+	@chanced = Place.new
+	@yahtz = Place.new
 	@valid = true
 	
 end	
 
 def numb(num)
 extra = true
-if num[0] < num[num.length - 1]
+if num[0] < num[num.length - 1] && num.length >1
 	@valid = false
 	puts "Not all the same number!"
 end
 
 if @valid
-	if num[0] == 1	&& @ones == 0		
-		@ones = num.length * 1 
-	elsif num[0] == 2 && @twos == 0		
-		@twos = num.length * 2 
-	elsif num[0] == 3 && @threes == 0		
-		@threes = num.length * 3 
-	elsif num[0] == 4 && @fours == 0		
-		@fours = num.length * 4
-	elsif num[0] ==5 && @fives == 0		
-		@fives = num.length * 5
-	elsif num[0] ==6 && @sixes == 0		
-		@sixes = num.length * 6
+	if num[0] == 1	&& @ones.valueShow == 0		
+		@ones.valueSet(num.length * 1)
+	elsif num[0] == 2 && @twos.valueShow == 0		
+		@twos.valueSet(num.length * 2) 
+	elsif num[0] == 3 && @threes.valueShow == 0		
+		@threes.valueSet(num.length * 3) 
+	elsif num[0] == 4 && @fours.valueShow == 0		
+		@fours.valueSet(num.length * 4)
+	elsif num[0] ==5 && @fives.valueShow == 0		
+		@fives.valueSet(num.length * 5)
+	elsif num[0] ==6 && @sixes.valueShow == 0		
+		@sixes.valueSet(num.length * 6)
 	else
 		extra = true
 		puts "Slot not empty! "
@@ -215,8 +317,8 @@ end
 
 def three(num)
 @valid = true
-if @threeo == 0
-	@threeo = num[0] * 3
+if @threeo.valueShow == 0
+	@threeo.valueSet(num[0] * 3)
 else
 	@valid = false
 	puts "slot not empty"
@@ -225,8 +327,8 @@ end
 
 def four(num)
 @valid = true
-if @fouro ==0
-	@fouro = num[0] * 4
+if @fouro.valueShow ==0
+	@fouro.valueSet(num[0] * 4)
 else
 	@valid = false
 	puts "Slot not empty"
@@ -235,8 +337,8 @@ end
 
 def full()
 @valid = true
-	if @fullh == 0 
-		@fullh = 25
+	if @fullh.valueShow == 0 
+		@fullh.valueSet(25)
 	else
 		@valid = false
 		puts "Slot not empty"
@@ -245,8 +347,8 @@ end
 
 def small()
 @valid = true
-	if @smalls == 0 
-		@smalls = 30
+	if @smalls.valueShow == 0 
+		@smalls.valueSet(30)
 	else
 		@valid = false
 		puts "Slot not empty"
@@ -255,8 +357,8 @@ end
 
 def large()
 @valid = true
-	if @larges == 0 
-		@larges = 40
+	if @larges.valueShow == 0 
+		@larges.valueSet(40)
 	else
 		@valid = false
 		puts "Slot not empty"
@@ -265,67 +367,73 @@ end
 
 def chance(num)
 @valid = true
-	if @chanced == 0 
-		num.each {|x| @chanced += x}
+total = 0
+	if @chanced.valueShow == 0 
+		num.each {|x| total += x}
+		@chanced.valueSet(total)
 	else
 		@valid = false
 		puts "Slot not empty"
 	end
 end
+
 def yahtzee()
 x = 0
-if @yahtz == 0
-	@yahtz = 50
+if @yahtz.valueShow == 0
+	@yahtz.valueSet(50)
 else
 	puts "Which catagory are you placing it in?"
-	if @threeo == 0
+	if @threeo.valueShow == 0
 		print "1: 3 of a kind, "
 		x=1
 	end
-	if @fouro == 0
+	if @fouro.valueShow == 0
 		print"2: 4 of a kind, "
 		x=1
 	end
-	if @fullh == 0
+	if @fullh.valueShow == 0
 		print"3: Full house, "
 		x=1
 	end
-	if @smalls == 0
+	if @smalls.valueShow == 0
 		print"4: Small Straight, "
 		x=1
 	end
-	if @larges == 0
+	if @larges.valueShow == 0
 		print"5: Large Straight, "
 		x=1
 	end
-	if @chanced == 0
+	if @chanced.valueShow == 0
 		print"6: Chance "
 		x=1
 	end
 	if x == 0
 		print "Cant use Yahtzee"
 	end
+	print"7: Cross off? "
 
 	scorer = gets.chomp
 	while x==1
 		if scorer  == "1"
-			@threeo = 100
+			@threeo.valueSet(100)
 			x=0
 		elsif scorer == "2"
-			@fouro = 100
+			@fouro.valueSet(100)
 			x=0
 		elsif scorer == "3"
-			@fullh =100
+			@fullh.valueSet(100)
 			x=0
 		elsif scorer == "4"
-			@smalls = 100
+			@smalls.valueSet(100)
 			x=0
 		elsif scorer == "5"
-			@larges = 100
+			@larges.valueSet(100)
 			x=0
 		elsif scorer == "6"
-			@chance = 100
+			@chance.valueSet(100)
 			x=0
+		elsif scorer == "7"
+			cross
 		else
 			print "nothing selected"
 		end
@@ -333,29 +441,70 @@ else
 end
 	
 end
+
 def cross()
 	disp
+	print "Which catagory will you cross off? "
+	line= gets.chomp
+	if line == "1"
+		@ones.crossed = true
+	elsif line == "2"
+		@twos.crossed  = true
+	elsif line == "3"
+		@threes.crossed  = true
+	elsif line == "4"
+		@fours.crossed  = true
+	elsif line == "5"
+		@fives.crossed  = true
+	elsif line == "6"
+		@sixes.crossed  = true
+	elsif line == "7"
+		@threeo.crossed  = true
+	elsif line == "8"
+		@fouro.crossed  = true
+	elsif line == "9"
+		@fullh.crossed  = true
+	elsif line == "10"
+		@smalls.crossed  = true	
+	elsif line == "11"
+		@larges.crossed  = true
+	elsif line == "12"
+		@yahtz.crossed  = true
+	elsif line == "13"
+		@chanced.crossed  = true
+	else
+		puts "Nothing Selected"
+	end
+	@valid = true
 end
 
 def disp()
-puts "1: Ones: #{@ones}"
-puts "2: Twos: #{@twos}"
-puts "3: Threes: #{@threes}"
-puts "4: Fours: #{@fours}"
-puts "5: Fives: #{@fives}"
-puts "6: Sixes: #{@sixes}"
-puts "7: 3 of a kind: #{@threeo}"
-puts "8: 4 of a kind: #{@fouro}"
-puts "9: Full House: #{@fullh}"
-puts "10: Small Straight: #{@smalls}"
-puts "11: Large Straight: #{@larges}"
-puts "12: Yahtzee: #{@yahtz}"
-puts "13: Chance: #{@chanced}"
+puts"	SCORECARD"
+puts "1: Ones: #{@ones.valueShow}"
+puts "2: Twos: #{@twos.valueShow}"
+puts "3: Threes: #{@threes.valueShow}"
+puts "4: Fours: #{@fours.valueShow}"
+puts "5: Fives: #{@fives.valueShow}"
+puts "6: Sixes: #{@sixes.valueShow}"
+puts"   -------------"
+puts "7: 3 of a kind: [#{@threeo.valueShow}]"
+puts"   -------------"
+puts "8: 4 of a kind: [#{@fouro.valueShow}]"
+puts"   -------------"
+puts "9: Full House: [#{@fullh.valueShow}]"
+puts"   -------------"
+puts "10: Small Straight: [#{@smalls.valueShow}]"
+puts"   -------------"
+puts "11: Large Straight: [#{@larges.valueShow}]"
+puts"   -------------"
+puts "12: Yahtzee: [#{@yahtz.valueShow}]"
+puts"   -------------"
+puts "13: Chance: [#{@chanced.valueShow}]"
 end
 
 def calculate()
-num_total = @ones + @twos + @threes + @fours + @fives + @sixes
-bottom_total  = @threeo + @fouro + @fullh + @smalls + @larges + @yahtz + @chanced
+num_total = @ones.value + @twos.value + @threes.value + @fours.value + @fives.value + @sixes.value
+bottom_total  = @threeo.value + @fouro.value + @fullh.value + @smalls.value + @larges.value + @yahtz.value + @chanced.value
 if num_total >= 63
 	puts"Got the bonus 30 points"
 	bigTotal = 30 + num_total + bottom_total
@@ -366,16 +515,18 @@ end
 
 end
 
-
-
-def isFull?()
-	if @ones != 0 && @twos != 0 && @threes != 0 && @fours != 0 && @fives != 0 && @sixes != 0 && @threeo != 0 && @fouro != 0 && @fullh != 0 && @smalls != 0 && @larges != 0 && @yahtz != 0 && @chanced != 0 
-		return true
-	else
-		return false
+def isFull()
+count = 0
+arr = [@ones.valueShow, @twos.valueShow, @threes.valueShow, @fours.valueShow, @fives.valueShow, @sixes.valueShow, @threeo.valueShow,@fouro.valueShow,@fullh.valueShow,@smalls.valueShow,@larges.valueShow,@yahtz.valueShow,@chanced.valueShow]
+arr.each do |x|
+	if x != 0 || x == "X"
+		count +=1
 	end
 end
+return true if count >=13
+return false
 
+end
 end
 
 d1 = Dice.new
